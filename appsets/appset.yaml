@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: appset
+spec:
+  generators:
+  - clusters:
+      selector:
+        matchLabels:
+          east: 'true'
+      values:
+        path: east
+  - clusters:
+      selector:
+        matchLabels:
+          west: 'true'
+      values:
+        path: west
+  template:
+    metadata:
+      name: 'guestbook-{{values.path}}-{{name}}'
+    spec:
+      project: default
+      source:
+        repoURL: https://github.com/dhpup/multi-region.git
+        targetRevision: HEAD
+        path: 'env/{{values.path}}'
+      destination:
+        server: '{{server}}'
+        namespace: 'guestbook-{{values.path}}'
+      syncPolicy:
+        automated:
+          prune: true
+        syncOptions:
+        - CreateNamespace=true
